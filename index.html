@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لحبيبتي 🌹</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#220817;--bg2:#5c1236;--soft:#ffd6e3;--gold:#ffd27a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:'Cairo',Tahoma,sans-serif;color:var(--soft);background:radial-gradient(circle at 50% 25%,var(--bg2),var(--bg1) 72%);overflow:hidden}
+canvas{position:fixed;left:0;top:0;pointer-events:none;z-index:3}
+.screen{position:fixed;inset:0;display:flex;padding:20px;z-index:2;transition:opacity 1s,transform 1s}
+#lock{align-items:center;justify-content:center}
+.card{width:100%;max-width:380px;text-align:center;padding:32px 24px;border-radius:24px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px);animation:glow 3s ease-in-out infinite}
+.lockicon{font-size:46px;animation:beat 1.6s infinite}
+h1{font-size:24px;margin:10px 0 6px;font-weight:900}
+p{margin:0 0 18px;line-height:1.9}
+input{width:100%;padding:14px;font:inherit;font-size:22px;text-align:center;letter-spacing:2px;border-radius:14px;border:2px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;outline:none;direction:ltr}
+input:focus{border-color:#ff4d7d}
+button{margin-top:14px;width:100%;padding:13px;font:inherit;font-weight:700;font-size:18px;border:0;border-radius:14px;color:#fff;background:linear-gradient(135deg,#ff4d7d,#ff7a59);cursor:pointer}
+button:active{transform:scale(.97)}
+#msg{min-height:26px;margin-top:12px;font-size:15px;color:var(--gold)}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes glow{0%,100%{box-shadow:0 0 24px rgba(255,77,125,.2)}50%{box-shadow:0 0 55px rgba(255,77,125,.5)}}
+@keyframes bloom{from{transform:scale(0) rotate(-120deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes shine{to{background-position:200% center}}
+#reveal{opacity:0;pointer-events:none;overflow-y:auto}
+#reveal.on{opacity:1;pointer-events:auto}
+.wrap{max-width:460px;width:100%;text-align:center;padding:36px 8px 170px;margin:auto}
+.big{font-size:70px;display:inline-block;animation:bloom 1.6s cubic-bezier(.2,1.4,.4,1) both,beat 1.5s 1.6s infinite}
+.title{font-size:31px;font-weight:900;margin:6px 0 22px;background:linear-gradient(90deg,#ff9ab8,#ffd27a,#ff9ab8);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite}
+.line{font-size:19px;line-height:2.1;margin:0 0 16px}
+.sign{font-size:26px;font-weight:900;color:var(--gold)}
+.w{display:inline-block;opacity:0;transform:translateY(10px);filter:blur(4px);transition:opacity .8s,transform .8s,filter .8s}
+.w.on{opacity:1;transform:none;filter:none}
+#again{width:auto;padding:10px 22px;font-size:16px;opacity:0;transition:opacity 1s;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25)}
+#again.on{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="screen" id="lock">
+  <div class="card" id="card">
+    <div class="lockicon">🔒</div>
+    <h1>مفاجأة ليكي 🌹</h1>
+    <p>عشان تفتحيها لازم تفتكري…<br>إمتى أول مرة اتعرفنا؟</p>
+    <input id="pw" inputmode="numeric" placeholder="يوم / شهر" autocomplete="off">
+    <button id="go">افتحي</button>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<div class="screen" id="reveal">
+  <div class="wrap">
+    <div class="big">🌹</div>
+    <div class="title" id="ttl"></div>
+    <div id="lines"></div>
+    <button id="again">🌹 مرة كمان</button>
+  </div>
+</div>
+
+<script>
+/* ====== عدّل هنا ====== */
+var HER_NAME = 'حبيبتي';
+var HINT_AFTER = 3;
+var MESSAGE = [
+  'كنت عارف إنك هتفتكري اليوم ده… لأنه عندي كمان مش أي يوم.',
+  'في اليوم ده اتعرفت عليكي، ومن وقتها الدنيا بقت أهدى وأحلى وأقرب للقلب.',
+  'مش بعرف أقول كل اللي جوايا بالكلام، فعملتلك الصفحة دي… وردة عمرها ما هتدبل.',
+  'وعشان عارف إنك بتحبي الورد جداً… زرعتلك جنينة ورد صغيرة.',
+  'شكراً إنك إنتي، وشكراً إنك معايا. 🤍'
+];
+var SIGN = 'بحبك ❤️';
+/* ====================== */
+
+var $ = function(id){return document.getElementById(id)};
+var fails = 0, opened = false, rain = false;
+
+function norm(s){
+  return s.replace(/[٠-٩]/g,function(d){return '٠١٢٣٤٥٦٧٨٩'.indexOf(d)})
+          .replace(/[۰-۹]/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)});
+}
+function ok(raw){
+  var s = norm(raw).trim();
+  var t = s.split(/\D+/).filter(Boolean).map(Number);
+  if (t.length >= 2) return t[0] === 31 && t[1] === 5;
+  if (t.length === 1 && /^\d+$/.test(s)) return s === '315' || s === '3105';
+  return false;
+}
+function tryOpen(){
+  if (opened) return;
+  if (ok($('pw').value)) return openIt();
+  fails++;
+  var c = $('card'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+  setTimeout(function(){ c.classList.remove('shake'); }, 480);
+  $('msg').textContent = fails >= HINT_AFTER ? 'تلميح: اليوم 31 😉 والشهر خمسة' : 'مش دي… جربي تاني 💭';
+}
+$('go').onclick = tryOpen;
+$('pw').addEventListener('keydown', function(e){ if (e.key === 'Enter') tryOpen(); });
+
+/* ====== الأنيميشن ====== */
+var cv = $('c'), cx = cv.getContext('2d'), W, H, P = [], S = [];
+var DPR = Math.min(window.devicePixelRatio || 1, 2);
+var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var MAXP = RM ? 30 : 110;
+var COL = ['#ff4d7d','#ff2e63','#e8174f','#ff7aa2','#d1103f','#ffb3c7'];
+
+function size(){
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  S = [];
+  for (var i = 0; i < 70; i++) S.push({x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.6 + .3, p: Math.random() * 6.28, v: .5 + Math.random() * 1.5});
+}
+size(); addEventListener('resize', size);
+
+function mix(a,b,t){return [a[0]+(b[0]-a[0])*t|0,a[1]+(b[1]-a[1])*t|0,a[2]+(b[2]-a[2])*t|0]}
+function rgb(c){return 'rgb('+c[0]+','+c[1]+','+c[2]+')'}
+function makeRose(dark,light){
+  var R=60,o=document.createElement('canvas');o.width=o.height=R*2+8;
+  var c=o.getContext('2d');c.translate(R+4,R+4);
+  for(var L=0;L<5;L++){
+    var col=mix(dark,light,L/4),rr=R*(1-L*.17);
+    for(var k=0;k<5;k++){
+      var a=L*.9+k*1.2566,px=Math.cos(a)*rr*.42,py=Math.sin(a)*rr*.42,pr=rr*.58;
+      var g=c.createRadialGradient(px*1.3,py*1.3,pr*.1,px,py,pr);
+      g.addColorStop(0,rgb(mix(col,[255,255,255],.12)));g.addColorStop(1,rgb(mix(col,[0,0,0],.28)));
+      c.fillStyle=g;c.beginPath();c.arc(px,py,pr,0,6.283);c.fill();
+    }
+  }
+  c.strokeStyle='rgba(60,0,20,.55)';c.lineWidth=1.6;c.beginPath();
+  for(var i=0;i<60;i++){var t=i*.35,r=1+i*.42,x=Math.cos(t)*r,y=Math.sin(t)*r;if(i)c.lineTo(x,y);else c.moveTo(x,y);}
+  c.stroke();
+  return o;
+}
+var RS=[makeRose([120,10,40],[255,70,110]),makeRose([170,20,70],[255,140,175]),makeRose([200,30,50],[255,120,110]),makeRose([150,10,60],[255,95,150])];
+var G=[],gStart=0;
+function growGarden(){
+  G=[];var n=Math.max(5,Math.ceil(W/62));
+  for(var i=0;i<n;i++)G.push({x:(i+.5)*W/n+(Math.random()-.5)*14,h:70+Math.random()*H*.16,sz:15+Math.random()*10,i:i%4,d:i*180+Math.random()*250,sw:Math.random()*6,lf:Math.random()<.5?1:-1});
+  gStart=performance.now();
+}
+function drawGarden(ts){
+  for(var i=0;i<G.length;i++){
+    var o=G[i],g=Math.min(1,Math.max(0,(ts-gStart-o.d)/1800));if(g<=0)continue;
+    var e=1-Math.pow(1-g,3),h=o.h*e,sx=Math.sin(ts/1400+o.sw)*5*e,tx=o.x+sx,ty=H-h;
+    cx.globalAlpha=1;cx.strokeStyle='#2f8f4e';cx.lineWidth=3;cx.lineCap='round';
+    cx.beginPath();cx.moveTo(o.x,H+4);cx.quadraticCurveTo(o.x+sx*.3-8*o.lf,H-h*.5,tx,ty);cx.stroke();
+    if(e>.4){var ls=(e-.4)/.6;cx.fillStyle='#3aa862';cx.save();cx.translate(o.x+sx*.2,H-h*.45);cx.rotate(o.lf*-.9);cx.beginPath();cx.ellipse(o.lf*10*ls,0,11*ls,4.5*ls,0,0,6.283);cx.fill();cx.restore();}
+    var b=Math.max(0,(g-.55)/.45);
+    if(b>0){var bb=1-Math.pow(1-b,3),z=o.sz*2*bb*(1+.04*Math.sin(ts/600+o.sw));cx.save();cx.translate(tx,ty);cx.rotate(o.sw+(1-bb)*2.5);cx.drawImage(RS[o.i],-z/2,-z/2,z,z);cx.restore();}
+  }
+}
+function mk(o){
+  var p = {x:0,y:0,vx:0,vy:0,s:10,r:0,vr:0,f:Math.random()*6,vf:.04+Math.random()*.06,g:0,d:1,life:-1,max:1,k:'petal',c:COL[(Math.random()*COL.length)|0],sw:Math.random()*6};
+  for (var k in o) p[k] = o[k];
+  P.push(p); return p;
+}
+function heartPath(s){
+  cx.beginPath(); cx.moveTo(0, s*.35);
+  cx.bezierCurveTo(-s*1.1, -s*.35, -s*.55, -s*1.05, 0, -s*.45);
+  cx.bezierCurveTo(s*.55, -s*1.05, s*1.1, -s*.35, 0, s*.35); cx.closePath();
+}
+function drawP(p){
+  var a = p.life >= 0 ? Math.min(1, p.life / (p.max * .35)) : 1;
+  cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+  if (p.k === 'rose'){ cx.globalAlpha = a; var z = p.s * 2; cx.drawImage(RS[p.i], -z/2, -z/2, z, z); } else if (p.k === 'petal'){
+    cx.globalAlpha = a; cx.scale(Math.abs(Math.cos(p.f)) * .8 + .2, 1);
+    var s = p.s; cx.beginPath(); cx.moveTo(0, -s);
+    cx.bezierCurveTo(s*.9, -s*.6, s*.7, s*.6, 0, s);
+    cx.bezierCurveTo(-s*.7, s*.6, -s*.9, -s*.6, 0, -s);
+    cx.fillStyle = p.c; cx.fill();
+  } else if (p.k === 'heart'){
+    cx.globalAlpha = a; cx.shadowColor = p.c; cx.shadowBlur = 12;
+    heartPath(p.s); cx.fillStyle = p.c; cx.fill();
+  } else {
+    cx.globalAlpha = a * (.6 + .4 * Math.sin(p.f * 3)); cx.globalCompositeOperation = 'lighter';
+    var g = cx.createRadialGradient(0,0,0,0,0,p.s*2);
+    g.addColorStop(0,'rgba(255,240,200,1)'); g.addColorStop(1,'rgba(255,200,120,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.arc(0,0,p.s*2,0,6.283); cx.fill();
+    cx.strokeStyle = 'rgba(255,235,190,.9)'; cx.lineWidth = 1; cx.beginPath();
+    cx.moveTo(-p.s*2.2,0); cx.lineTo(p.s*2.2,0); cx.moveTo(0,-p.s*2.2); cx.lineTo(0,p.s*2.2); cx.stroke();
+  }
+  cx.restore();
+}
+function heartBurst(x, y, sc, n){
+  for (var i = 0; i < n; i++){
+    var t = i / n * 6.2832, hx = 16 * Math.pow(Math.sin(t), 3),
+        hy = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
+    mk({x:x,y:y,vx:hx*sc,vy:hy*sc,d:.955,g:.025,s:(i%7===0?11:5)+Math.random()*6,k:i%7===0?'rose':(i%3?'heart':'petal'),i:i%4,r:Math.random()*6,vr:(Math.random()-.5)*.1,life:160,max:160});
+  }
+}
+function sparkBurst(x, y, n, sp){
+  for (var i = 0; i < n; i++){
+    var a = Math.random() * 6.283, v = (.5 + Math.random()) * sp;
+    mk({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,d:.94,s:2+Math.random()*3,k:'spark',life:70,max:70});
+  }
+}
+function loop(ts){
+  cx.clearRect(0, 0, W, H);
+  for (var i = 0; i < S.length; i++){
+    var s = S[i]; cx.globalAlpha = Math.max(0, .25 + .35 * Math.sin(ts / 1000 * s.v + s.p));
+    cx.fillStyle = '#ffe6ef'; cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.283); cx.fill();
+  }
+  cx.globalAlpha = 1;
+  drawGarden(ts);
+  if (rain && P.length < MAXP){
+    var q = Math.random();
+    if (q > .44 && q < .46) mk({x:Math.random()*W,y:-40,vy:.7+Math.random()*1.1,vr:(Math.random()-.5)*.025,s:13+Math.random()*10,k:'rose',i:(Math.random()*4)|0});
+    if (q < .3) mk({x:Math.random()*W,y:-30,vy:.8+Math.random()*1.6,vr:(Math.random()-.5)*.03,s:8+Math.random()*9,k:Math.random()<.8?'petal':'heart'});
+    else if (q < .38) mk({x:Math.random()*W,y:H+20,vy:-(.8+Math.random()*1.2),s:6+Math.random()*7,k:'heart',vr:0});
+    else if (q < .44) mk({x:Math.random()*W,y:Math.random()*H,s:2+Math.random()*2.5,k:'spark',life:90,max:90});
+  } else if (!rain && P.length < 8 && Math.random() < .02){
+    mk({x:Math.random()*W,y:H+20,vy:-(.5+Math.random()*.7),s:5+Math.random()*5,k:'heart',vr:0,c:'#ff7aa2'});
+  }
+  for (var j = P.length - 1; j >= 0; j--){
+    var p = P[j];
+    p.vy += p.g; p.vx *= p.d; if (p.d !== 1) p.vy *= p.d;
+    if (p.life < 0 && p.k !== 'spark') p.x += Math.sin(p.y / 45 + p.sw) * .8;
+    p.x += p.vx; p.y += p.vy; p.r += p.vr; p.f += p.vf;
+    if (p.life > 0) p.life--;
+    drawP(p);
+    if (p.life === 0 || p.y > H + 60 || p.y < -80) P.splice(j, 1);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ====== فتح الصفحة ====== */
+function writeLine(text, cls, delay){
+  var p = document.createElement('p'); p.className = 'line' + (cls ? ' ' + cls : '');
+  text.split(' ').forEach(function(w, i){
+    var sp = document.createElement('span'); sp.className = 'w'; sp.textContent = w;
+    p.appendChild(sp); p.appendChild(document.createTextNode(' '));
+    setTimeout(function(){ sp.classList.add('on'); }, delay + i * 170);
+  });
+  $('lines').appendChild(p);
+  return delay + text.split(' ').length * 170 + 800;
+}
+function celebrate(){
+  var x = W / 2, y = H / 2, u = Math.min(W, H);
+  heartBurst(x, y, u / 700, 70); sparkBurst(x, y, 40, 5);
+  setTimeout(function(){ heartBurst(x, y, u / 1100, 50); sparkBurst(x, y, 30, 4); }, 450);
+}
+function openIt(){
+  opened = true;
+  $('lock').style.opacity = 0; $('lock').style.transform = 'scale(1.1)';
+  setTimeout(function(){ $('lock').style.display = 'none'; }, 1000);
+  celebrate();
+  setTimeout(function(){ rain = true; }, 700); setTimeout(growGarden, 900);
+  $('ttl').textContent = 'فتحتيها يا ' + HER_NAME + ' ✨';
+  setTimeout(function(){ $('reveal').classList.add('on'); }, 700);
+  var d = 1700;
+  MESSAGE.forEach(function(t){ d = writeLine(t, '', d); });
+  d = writeLine(SIGN, 'sign', d);
+  setTimeout(function(){ $('again').classList.add('on'); }, d);
+}
+$('again').onclick = celebrate;
+
+addEventListener('pointerdown', function(e){
+  if (!opened) return;
+  sparkBurst(e.clientX, e.clientY, 10, 4);
+  for (var i = 0; i < 6; i++){
+    var a = i / 6 * 6.283;
+    mk({x:e.clientX,y:e.clientY,vx:Math.cos(a)*3,vy:Math.sin(a)*3-1,d:.95,g:.04,s:6+Math.random()*4,k:'heart',life:80,max:80});
+  }
+});
+var lastMove = 0;
+addEventListener('pointermove', function(e){
+  if (!opened || RM) return;
+  var n = Date.now(); if (n - lastMove < 45) return; lastMove = n;
+  mk({x:e.clientX,y:e.clientY,vx:(Math.random()-.5),vy:.4,d:.97,s:2+Math.random()*2,k:'spark',life:50,max:50});
+});
+</script>
+</body>
+</html>
